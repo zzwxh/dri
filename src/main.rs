@@ -4,12 +4,27 @@ use anyhow::{ensure, Result};
 use serde::Deserialize;
 
 fn main() -> Result<()> {
-    let images = list_image()?;
+    let images = image_list()?;
     println!("{:?}", images);
     Ok(())
 }
 
-fn list_image() -> Result<Vec<Image>> {
+fn container_run(image: &str, name: &str, port: u16) -> Result<()> {
+    run_podman(&[
+        "container",
+        "run",
+        "--rm",
+        "--detach",
+        "--publish",
+        &format!("127.0.0.1:{}:22", port),
+        "--name",
+        &format!("dri/{}", name),
+        &format!("localhost/dri/{}", image),
+    ])?;
+    Ok(())
+}
+
+fn image_list() -> Result<Vec<Image>> {
     let json = run_podman(&["image", "list", "--format", "json"])?;
     let vec = serde_json::from_str(&json)?;
     Ok(vec)
@@ -25,7 +40,13 @@ struct Image {
 
 fn run_podman(args: &[&str]) -> Result<String> {
     let out = Command::new("podman").args(args).output()?;
-    ensure!(out.status.success());
     let stdout = String::from_utf8(out.stdout)?;
+    let stderr = String::from_utf8(out.stderr)?;
+    ensure!(
+        out.status.success(),
+        "stdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr,
+    );
     Ok(stdout)
 }
