@@ -1,11 +1,45 @@
 use std::process::Command;
 
 use anyhow::{ensure, Result};
+use clap::{Parser, Subcommand};
 use serde::Deserialize;
 
+#[derive(Debug, Parser)]
+struct Cli {
+    #[command(subcommand)]
+    cmd: Cmd,
+}
+
+#[derive(Debug, Subcommand)]
+enum Cmd {
+    /// list images
+    Images,
+    /// list containers
+    Containers,
+    /// new a container
+    Run {
+        name: String,
+        /// image name
+        #[arg(long, default_value = "default")]
+        image: String,
+        /// ssh port
+        #[arg(long, default_value_t = 44422)]
+        port: u16,
+    },
+    /// stop a container
+    Stop {
+        name: String,
+        /// save before stop
+        #[arg(long, default_value_t = true)]
+        save: bool,
+    },
+    /// remove an image
+    Remove { name: String },
+}
+
 fn main() -> Result<()> {
-    let images = image_list()?;
-    println!("{:?}", images);
+    let cli = Cli::parse();
+    println!("{:?}", cli);
     Ok(())
 }
 
