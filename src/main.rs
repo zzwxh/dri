@@ -30,6 +30,7 @@ enum Cmd {
     Stop {
         name: String,
         /// save before stop
+        #[arg(long)]
         save: bool,
     },
     /// remove an image
