@@ -10,7 +10,7 @@ fn main() -> Result<()> {
 }
 
 fn list_image() -> Result<Vec<Image>> {
-    let json = run_podman(&["image", "list", "--format=json"])?;
+    let json = run_podman(&["image", "list", "--format", "json"])?;
     let vec = serde_json::from_str(&json)?;
     Ok(vec)
 }
