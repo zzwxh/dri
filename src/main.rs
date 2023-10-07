@@ -17,10 +17,10 @@ fn list_image() -> Result<Vec<Image>> {
 
 #[derive(Debug, Deserialize)]
 struct Image {
-    #[serde(rename = "Size")]
-    size: u64,
     #[serde(rename = "Names")]
     names: Vec<String>,
+    #[serde(rename = "Size")]
+    size: u64,
 }
 
 fn run_podman(args: &[&str]) -> Result<String> {
