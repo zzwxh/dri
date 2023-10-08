@@ -1,8 +1,33 @@
-use std::process::Command;
+use std::{net::TcpListener, process::Command};
 
 use anyhow::{ensure, Result};
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
+
+#[test]
+fn test() {
+    let x = "hello";
+    let y = encode(x);
+    let z = decode(&y);
+    panic!("{}\n{}", y, z);
+}
+
+fn encode(input: &str) -> String {
+    let mut out = Vec::new();
+    for b in input.as_bytes() {
+        out.push((b & 0x0F) + 0x61);
+        out.push(((b & 0xF0) >> 4) + 0x61);
+    }
+    String::from_utf8(out).unwrap()
+}
+
+fn decode(input: &str) -> String {
+    let mut out = Vec::new();
+    for b in input.as_bytes().chunks(2) {
+        out.push((b[0] - 0x61) | (b[1] - 0x61) << 4);
+    }
+    String::from_utf8(out).unwrap()
+}
 
 #[derive(Debug, Parser)]
 struct Cli {
@@ -18,12 +43,13 @@ enum Cmd {
     Containers,
     /// new a container
     Run {
+        #[arg(long, value_parser=parse_container_name)]
         name: String,
         /// image name
-        #[arg(long, default_value = "default")]
+        #[arg(long, default_value = "default", value_parser=parse_image_name)]
         image: String,
         /// ssh port
-        #[arg(long, default_value_t = 44422)]
+        #[arg(long, default_value_t = 49222, value_parser=parse_port)]
         port: u16,
     },
     /// stop a container
@@ -35,6 +61,27 @@ enum Cmd {
     },
     /// remove an image
     Remove { name: String },
+}
+
+fn parse_port(raw: &str) -> Result<u16> {
+    let port = raw.parse()?;
+    ensure!(port >= 49152);
+    TcpListener::bind(("127.0.0.1", port))?;
+    Ok(port)
+}
+
+fn parse_container_name(raw: &str) -> Result<String> {
+    let mut name = raw.to_string();
+    let vaild = name.chars().all(|c| c.is_ascii_alphanumeric());
+    ensure!(vaild);
+    name.make_ascii_lowercase();
+    ensure!(name != "default");
+    Ok(name)
+}
+
+fn parse_image_name(raw: &str) -> Result<String> {
+    let mut name = raw.to_string();
+    Ok(name)
 }
 
 fn main() -> Result<()> {
