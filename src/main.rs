@@ -34,9 +34,9 @@ struct Cli {
 enum Cmd {
     List,
     Run {
-        #[arg(short,long)]
+        #[arg(short, long)]
         image: Option<String>,
-        #[arg(short,long)]
+        #[arg(short, long)]
         name: String,
         #[arg(short, long)]
         port: u16,
@@ -48,8 +48,17 @@ fn main() -> Result<()> {
     println!("{:?}", cli);
     match cli.cmd {
         Cmd::List => {
-            image_list()?.iter().for_each(|i| println!("{:?}", i));
-            container_list()?.iter().for_each(|c| println!("{:?}", c));
+            let images: Vec<Image> = image_list()?
+                .into_iter()
+                .filter(|i| i.name != "default")
+                .collect();
+            let containers = container_list()?;
+            for i in images {
+                println!("Image Name:{} Size:{}",decode(&i.name)?,i.size);
+            }
+            for c in containers {
+                println!("Container Name:{} Size:{}",decode(&c.name)?,c.size);
+            }
         }
         Cmd::Run { image, name, port } => {
             let image = image.unwrap_or("default".to_string());
