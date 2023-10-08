@@ -34,9 +34,9 @@ struct Cli {
 enum Cmd {
     List,
     Run {
-        #[arg(short,long,value_parser=encode)]
+        #[arg(short,long)]
         image: Option<String>,
-        #[arg(short,long,value_parser=encode)]
+        #[arg(short,long)]
         name: String,
         #[arg(short, long)]
         port: u16,
