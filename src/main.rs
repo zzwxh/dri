@@ -49,6 +49,10 @@ enum Cmd {
         #[arg(short, long)]
         name: String,
     },
+    Remove {
+        #[arg(short, long)]
+        name: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -88,7 +92,18 @@ fn main() -> Result<()> {
             ensure!(is_container(&name)?);
             container_save(&name)?;
         }
+        Cmd::Remove { name } => {
+            let name = encode(&name)?;
+            ensure!(is_image(&name)?);
+            ensure!(!is_container(&name)?);
+            image_remove(&name)?;
+        }
     }
+    Ok(())
+}
+
+fn image_remove(name: &str) -> Result<()> {
+    run_podman(&["image", "rm", &format!("localhost/dri/{}", name)])?;
     Ok(())
 }
 
