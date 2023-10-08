@@ -57,7 +57,6 @@ enum Cmd {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    println!("{:?}", cli);
     match cli.cmd {
         Cmd::List => {
             let images: Vec<Image> = image_list()?
@@ -66,10 +65,10 @@ fn main() -> Result<()> {
                 .collect();
             let containers = container_list()?;
             for i in images {
-                println!("Image Name:{} Size:{}", decode(&i.name)?, i.size);
+                println!("I Name:{} Size:{}", decode(&i.name)?, i.size);
             }
             for c in containers {
-                println!("Container Name:{} Size:{}", decode(&c.name)?, c.size);
+                println!("C Name:{} Size:{}", decode(&c.name)?, c.size);
             }
         }
         Cmd::Run { image, name, port } => {
