@@ -64,12 +64,12 @@ fn main() -> Result<()> {
                 .filter(|i| i.name != "default")
                 .collect();
             let containers = container_list()?;
-            println!("TYP NAME                   SIZE");
+            println!("TYPE   NAME                 SIZE");
             for i in images {
-                println!("I   {:<20} {:<20}", decode(&i.name)?, i.size);
+                println!("I      {:<20} {:<20}", decode(&i.name)?, i.size);
             }
             for c in containers {
-                println!("C   {:<20} {:<20}", decode(&c.name)?, c.size);
+                println!("C     {:<20} {:<20}", decode(&c.name)?, c.size);
             }
         }
         Cmd::Run { image, name, port } => {
