@@ -1,4 +1,4 @@
-use std::{net::TcpListener, process::Command};
+use std::{process::Command};
 
 use anyhow::{ensure, Result};
 use clap::{Parser, Subcommand};
@@ -29,51 +29,7 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Cmd {
-    /// list images
-    Images,
-    /// list containers
-    Containers,
-    /// new a container
-    Run {
-        #[arg(long, value_parser=parse_container_name)]
-        name: String,
-        /// image name
-        #[arg(long, default_value = "default", value_parser=parse_image_name)]
-        image: String,
-        /// ssh port
-        #[arg(long, default_value_t = 49222, value_parser=parse_port)]
-        port: u16,
-    },
-    /// stop a container
-    Stop {
-        name: String,
-        /// save before stop
-        #[arg(long)]
-        save: bool,
-    },
-    /// remove an image
-    Remove { name: String },
-}
-
-fn parse_port(raw: &str) -> Result<u16> {
-    let port = raw.parse()?;
-    ensure!(port >= 49152);
-    TcpListener::bind(("127.0.0.1", port))?;
-    Ok(port)
-}
-
-fn parse_container_name(raw: &str) -> Result<String> {
-    let mut name = raw.to_string();
-    let vaild = name.chars().all(|c| c.is_ascii_alphanumeric());
-    ensure!(vaild);
-    name.make_ascii_lowercase();
-    ensure!(name != "default");
-    Ok(name)
-}
-
-fn parse_image_name(raw: &str) -> Result<String> {
-    let mut name = raw.to_string();
-    Ok(name)
+    
 }
 
 fn main() -> Result<()> {
