@@ -219,7 +219,7 @@ fn run_podman(args: &[&str]) -> Result<String> {
     let stderr = String::from_utf8(out.stderr)?;
     ensure!(
         out.status.success(),
-        "stdout:\n{}\nstderr:\n{}",
+        "\nstdout:\n{}\nstderr:\n{}\n",
         stdout,
         stderr,
     );
