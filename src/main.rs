@@ -4,14 +4,6 @@ use anyhow::{ensure, Result};
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
 
-#[test]
-fn test() {
-    let x = "hello";
-    let y = encode(x);
-    let z = decode(&y);
-    panic!("{}\n{}", y, z);
-}
-
 fn encode(input: &str) -> String {
     let mut out = Vec::new();
     for b in input.as_bytes() {
