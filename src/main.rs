@@ -32,11 +32,13 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Cmd {
+    List,
     Run {
-        #[arg(long,value_parser=encode)]
-        image: String,
-        #[arg(long,value_parser=encode)]
+        #[arg(short,long,value_parser=encode)]
+        image: Option<String>,
+        #[arg(short,long,value_parser=encode)]
         name: String,
+        #[arg(short, long)]
         port: u16,
     },
 }
@@ -44,6 +46,17 @@ enum Cmd {
 fn main() -> Result<()> {
     let cli = Cli::parse();
     println!("{:?}", cli);
+    match cli.cmd {
+        Cmd::List => {
+            image_list()?.iter().for_each(|i| println!("{:?}", i));
+        }
+        Cmd::Run { image, name, port } => {
+            let image = image.unwrap_or("default".to_string());
+            let exists = image_list()?.iter().any(|i| i.name == image);
+            ensure!(exists);
+            container_run(&image, &name, port)?;
+        }
+    }
     Ok(())
 }
 
@@ -56,7 +69,7 @@ fn container_run(image: &str, name: &str, port: u16) -> Result<()> {
         "--publish",
         &format!("127.0.0.1:{}:22", port),
         "--name",
-        &format!("dri/{}", name),
+        &format!("dri-{}", name),
         &format!("localhost/dri/{}", image),
     ])?;
     Ok(())
@@ -64,12 +77,30 @@ fn container_run(image: &str, name: &str, port: u16) -> Result<()> {
 
 fn image_list() -> Result<Vec<Image>> {
     let json = run_podman(&["image", "list", "--format", "json"])?;
-    let vec = serde_json::from_str(&json)?;
+    let raw_vec: Vec<RawImage> = serde_json::from_str(&json)?;
+    let vec = raw_vec
+        .into_iter()
+        .filter_map(|image| {
+            image.names[0]
+                .strip_prefix("localhost/dri/")
+                .map(|s| s.strip_suffix(":latest").unwrap())
+                .map(|s| Image {
+                    name: s.to_string(),
+                    size: image.size,
+                })
+        })
+        .collect();
     Ok(vec)
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 struct Image {
+    name: String,
+    size: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct RawImage {
     #[serde(rename = "Names")]
     names: Vec<String>,
     #[serde(rename = "Size")]
