@@ -1,24 +1,27 @@
-use std::{process::Command};
+use std::process::Command;
 
 use anyhow::{ensure, Result};
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
 
-fn encode(input: &str) -> String {
+fn encode(input: &str) -> Result<String> {
+    ensure!(input.len() <= 20);
     let mut out = Vec::new();
     for b in input.as_bytes() {
         out.push((b & 0x0F) + 0x61);
         out.push(((b & 0xF0) >> 4) + 0x61);
     }
-    String::from_utf8(out).unwrap()
+    Ok(String::from_utf8(out).unwrap())
 }
 
-fn decode(input: &str) -> String {
+fn decode(input: &str) -> Result<String> {
+    ensure!(input.len() <= 40);
+    ensure!(input.len() % 2 == 0);
     let mut out = Vec::new();
     for b in input.as_bytes().chunks(2) {
         out.push((b[0] - 0x61) | (b[1] - 0x61) << 4);
     }
-    String::from_utf8(out).unwrap()
+    Ok(String::from_utf8(out)?)
 }
 
 #[derive(Debug, Parser)]
@@ -29,7 +32,13 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Cmd {
-    
+    Run {
+        #[arg(long,value_parser=encode)]
+        image: String,
+        #[arg(long,value_parser=encode)]
+        name: String,
+        port: u16,
+    },
 }
 
 fn main() -> Result<()> {
