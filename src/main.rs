@@ -77,7 +77,7 @@ fn main() -> Result<()> {
         Cmd::Stop { name } => {
             let name = encode(&name)?;
             ensure!(is_container(&name)?);
-            container_stop()?;
+            container_stop(&name)?;
         }
     }
     Ok(())
