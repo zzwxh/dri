@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use anyhow::{ensure, Result};
+use anyhow::{ensure, Ok, Result};
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
 
@@ -49,6 +49,7 @@ fn main() -> Result<()> {
     match cli.cmd {
         Cmd::List => {
             image_list()?.iter().for_each(|i| println!("{:?}", i));
+            container_list()?.iter().for_each(|c| println!("{:?}", c));
         }
         Cmd::Run { image, name, port } => {
             let image = image.unwrap_or("default".to_string());
@@ -75,18 +76,53 @@ fn container_run(image: &str, name: &str, port: u16) -> Result<()> {
     Ok(())
 }
 
+fn container_list() -> Result<Vec<Container>> {
+    let json = run_podman(&["container", "list", "--size", "--format", "json"])?;
+    let raw_vec: Vec<RawContainer> = serde_json::from_str(&json)?;
+    let vec = raw_vec
+        .into_iter()
+        .filter_map(|raw| {
+            raw.names[0].strip_prefix("dri-").map(|s| Container {
+                name: s.to_string(),
+                size: raw.size.root_fs_size,
+            })
+        })
+        .collect();
+    Ok(vec)
+}
+
+#[derive(Debug)]
+struct Container {
+    name: String,
+    size: u64,
+}
+
+#[derive(Deserialize)]
+struct RawContainer {
+    #[serde(rename = "Names")]
+    names: Vec<String>,
+    #[serde(rename = "Size")]
+    size: RawContainerSize,
+}
+
+#[derive(Deserialize)]
+struct RawContainerSize {
+    #[serde(rename = "rootFsSize")]
+    root_fs_size: u64,
+}
+
 fn image_list() -> Result<Vec<Image>> {
     let json = run_podman(&["image", "list", "--format", "json"])?;
     let raw_vec: Vec<RawImage> = serde_json::from_str(&json)?;
     let vec = raw_vec
         .into_iter()
-        .filter_map(|image| {
-            image.names[0]
+        .filter_map(|raw| {
+            raw.names[0]
                 .strip_prefix("localhost/dri/")
                 .map(|s| s.strip_suffix(":latest").unwrap())
                 .map(|s| Image {
                     name: s.to_string(),
-                    size: image.size,
+                    size: raw.size,
                 })
         })
         .collect();
