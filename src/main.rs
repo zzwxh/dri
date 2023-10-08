@@ -93,11 +93,18 @@ fn main() -> Result<()> {
 }
 
 fn container_save(name: &str) -> Result<()> {
+    run_podman(&[
+        "container",
+        "commit",
+        "--pause",
+        &format!("dri-{}", name),
+        &format!("localhost/dri/{}", name),
+    ])?;
     Ok(())
 }
 
 fn container_stop(name: &str) -> Result<()> {
-    run_podman(&["container", "stop", &format!("dri-{}", name)])?;
+    run_podman(&["container", "stop", "--time", "2", &format!("dri-{}", name)])?;
     Ok(())
 }
 
