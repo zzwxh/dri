@@ -41,6 +41,10 @@ enum Cmd {
         #[arg(short, long)]
         port: u16,
     },
+    Stop {
+        #[arg(short, long)]
+        name: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -54,20 +58,42 @@ fn main() -> Result<()> {
                 .collect();
             let containers = container_list()?;
             for i in images {
-                println!("Image Name:{} Size:{}",decode(&i.name)?,i.size);
+                println!("Image Name:{} Size:{}", decode(&i.name)?, i.size);
             }
             for c in containers {
-                println!("Container Name:{} Size:{}",decode(&c.name)?,c.size);
+                println!("Container Name:{} Size:{}", decode(&c.name)?, c.size);
             }
         }
         Cmd::Run { image, name, port } => {
-            let image = image.unwrap_or("default".to_string());
-            let exists = image_list()?.iter().any(|i| i.name == image);
-            ensure!(exists);
+            let image = match image {
+                Some(s) => encode(&s)?,
+                None => "default".to_string(),
+            };
+            let name = encode(&name)?;
+            ensure!(is_image(&image)?);
+            ensure!(!is_container(&name)?);
             container_run(&image, &name, port)?;
+        }
+        Cmd::Stop { name } => {
+            let name = encode(&name)?;
+            ensure!(is_container(&name)?);
+            container_stop()?;
         }
     }
     Ok(())
+}
+
+fn container_stop(name: &str) -> Result<()> {
+    run_podman(&["container", "stop", &format!("dri-{}", name)])?;
+    Ok(())
+}
+
+fn is_image(name: &str) -> Result<bool> {
+    Ok(image_list()?.iter().any(|i| i.name == name))
+}
+
+fn is_container(name: &str) -> Result<bool> {
+    Ok(container_list()?.iter().any(|c| c.name == name))
 }
 
 fn container_run(image: &str, name: &str, port: u16) -> Result<()> {
