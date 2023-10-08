@@ -66,10 +66,18 @@ fn main() -> Result<()> {
             let containers = container_list()?;
             println!("TYPE   NAME                 SIZE");
             for i in images {
-                println!("I      {:<20} {:<20}", decode(&i.name)?, i.size);
+                println!(
+                    "I      {:<20} {:<20}",
+                    decode(&i.name)?,
+                    i.size as f32 / 1048576f32
+                );
             }
             for c in containers {
-                println!("C     {:<20} {:<20}", decode(&c.name)?, c.size);
+                println!(
+                    "C     {:<20} {:<20}",
+                    decode(&c.name)?,
+                    c.size as f32 / 1048576f32
+                );
             }
         }
         Cmd::Run { image, name, port } => {
