@@ -45,6 +45,10 @@ enum Cmd {
         #[arg(short, long)]
         name: String,
     },
+    Save {
+        #[arg(short, long)]
+        name: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -63,7 +67,7 @@ fn main() -> Result<()> {
             for c in containers {
                 println!("Container Name:{} Size:{}", decode(&c.name)?, c.size);
             }
-        }
+        },
         Cmd::Run { image, name, port } => {
             let image = match image {
                 Some(s) => encode(&s)?,
@@ -73,13 +77,22 @@ fn main() -> Result<()> {
             ensure!(is_image(&image)?);
             ensure!(!is_container(&name)?);
             container_run(&image, &name, port)?;
-        }
+        },
         Cmd::Stop { name } => {
             let name = encode(&name)?;
             ensure!(is_container(&name)?);
             container_stop(&name)?;
-        }
+        },
+        Cmd::Save { name } => {
+            let name = encode(&name)?;
+            ensure!(is_container(&name)?);
+            container_save(&name)?;
+        },
     }
+    Ok(())
+}
+
+fn container_save(name: &str) -> Result<()> {
     Ok(())
 }
 
