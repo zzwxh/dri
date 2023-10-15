@@ -137,6 +137,7 @@ fn container_list() -> Result<Vec<Container>> {
     Ok(vec)
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 struct Container {
     name: String,
@@ -181,6 +182,7 @@ fn image_list() -> Result<Vec<Image>> {
     Ok(vec)
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 struct Image {
     name: String,
