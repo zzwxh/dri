@@ -4,6 +4,16 @@ use anyhow::{ensure, Result};
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
 
+const DOCKERFILE: &str = r#"
+FROM docker.io/redhat/ubi9
+RUN dnf -y update && dnf -y install openssh-server && echo '123456' | passwd --stdin root && echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && ssh-keygen -A
+CMD /usr/sbin/sshd -D
+"#;
+
+const BUILD_COMMAND: &str = r#"
+podman build --tag localhost/drix/default:latest .
+"#;
+
 #[derive(Debug, Parser)]
 struct Cli {
     #[command(subcommand)]
@@ -17,6 +27,7 @@ enum Cmd {
     Stop { name: String },
     Rm { name: String },
     Ls {},
+    Build {},
 }
 
 fn main() -> Result<()> {
@@ -68,6 +79,10 @@ fn main() -> Result<()> {
             image_list()?.iter().for_each(|i| {
                 println!("{:?}", i);
             });
+        }
+        Cmd::Build {} => {
+            println!("Dockerfile: {}", DOCKERFILE);
+            println!("Build Command: {}", BUILD_COMMAND);
         }
     }
     Ok(())
