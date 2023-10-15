@@ -125,7 +125,7 @@ fn container_list() -> Result<Vec<Container>> {
         .filter_map(|raw| {
             parse_container_name(&raw.names[0]).map(|name| Container {
                 name,
-                size: raw.size.root_fs_size,
+                size: raw.size.root_fs_size as f64 / 1024.0 / 1024.0,
             })
         })
         .collect();
@@ -135,7 +135,7 @@ fn container_list() -> Result<Vec<Container>> {
 #[derive(Debug)]
 struct Container {
     name: String,
-    size: u64,
+    size: f64,
 }
 
 #[derive(Deserialize)]
@@ -160,7 +160,7 @@ fn image_list() -> Result<Vec<Image>> {
         .filter_map(|raw| {
             parse_image_name(&raw.names[0]).map(|name| Image {
                 name,
-                size: raw.size,
+                size: raw.size as f64 / 1024.0 / 1024.0,
             })
         })
         .collect();
@@ -170,7 +170,7 @@ fn image_list() -> Result<Vec<Image>> {
 #[derive(Debug)]
 struct Image {
     name: String,
-    size: u64,
+    size: f64,
 }
 
 #[derive(Debug, Deserialize)]
