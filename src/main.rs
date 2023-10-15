@@ -130,6 +130,7 @@ fn container_list() -> Result<Vec<Container>> {
             parse_container_name(&raw.names[0]).map(|name| Container {
                 name,
                 size: raw.size.root_fs_size as f64 / 1024.0 / 1024.0,
+                port: raw.ports[0].host_port,
             })
         })
         .collect();
@@ -140,6 +141,7 @@ fn container_list() -> Result<Vec<Container>> {
 struct Container {
     name: String,
     size: f64,
+    port: u16,
 }
 
 #[derive(Deserialize)]
@@ -148,12 +150,20 @@ struct RawContainer {
     names: Vec<String>,
     #[serde(rename = "Size")]
     size: RawContainerSize,
+    #[serde(rename = "Ports")]
+    ports: Vec<RawPortMap>,
 }
 
 #[derive(Deserialize)]
 struct RawContainerSize {
     #[serde(rename = "rootFsSize")]
     root_fs_size: u64,
+}
+
+#[derive(Deserialize)]
+struct RawPortMap {
+    #[serde(rename = "host_port")]
+    host_port: u16,
 }
 
 fn image_list() -> Result<Vec<Image>> {
