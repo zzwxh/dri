@@ -43,6 +43,10 @@ enum Cmd {
 fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.cmd {
+        Cmd::Build {} => {
+            println!("Dockerfile: {}", DOCKERFILE);
+            println!("Build Command: {}", BUILD_COMMAND);
+        }
         Cmd::New { name, port } => {
             run_podman(&[
                 "container",
@@ -73,6 +77,14 @@ fn main() -> Result<()> {
                 &encode_image_name(&name),
             ])?;
         }
+        Cmd::List {} => {
+            container_list()?.iter().for_each(|c| {
+                println!("{:?}", c);
+            });
+            image_list()?.iter().for_each(|i| {
+                println!("{:?}", i);
+            });
+        }
         Cmd::Stop { name } => {
             run_podman(&[
                 "container",
@@ -88,18 +100,6 @@ fn main() -> Result<()> {
         }
         Cmd::Remove { name } => {
             run_podman(&["image", "rm", &encode_image_name(&name)])?;
-        }
-        Cmd::List {} => {
-            container_list()?.iter().for_each(|c| {
-                println!("{:?}", c);
-            });
-            image_list()?.iter().for_each(|i| {
-                println!("{:?}", i);
-            });
-        }
-        Cmd::Build {} => {
-            println!("Dockerfile: {}", DOCKERFILE);
-            println!("Build Command: {}", BUILD_COMMAND);
         }
     }
     Ok(())
