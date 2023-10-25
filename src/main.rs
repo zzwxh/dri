@@ -5,8 +5,10 @@ use clap::{Parser, Subcommand};
 use serde::Deserialize;
 
 const DOCKERFILE: &str = r#"
-FROM docker.io/redhat/ubi9
-RUN dnf -y update && dnf -y install openssh-server && echo '123456' | passwd --stdin root && echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && ssh-keygen -A
+FROM docker.io/fedora
+RUN dnf -y upgrade
+RUN dnf -y install openssh-server passwd 
+RUN echo '123456' | passwd --stdin root && echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && ssh-keygen -A
 CMD /usr/sbin/sshd -D
 "#;
 
@@ -22,12 +24,20 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Cmd {
-    New { name: String, port: u16 },
-    Run { name: String, port: u16 },
-    Stop { name: String },
-    Rm { name: String },
-    Ls {},
+    /// Print command to build the default image
     Build {},
+    /// Lunch a container from the default image
+    New { name: String, port: u16 },
+    /// Lunch a container from an existing image
+    Run { name: String, port: u16 },
+    /// List all containers and images
+    List {},
+    /// Stop a container
+    Stop { name: String },
+    /// Stop a container without saving
+    Kill { name: String },
+    /// Remove an image
+    Remove { name: String },
 }
 
 fn main() -> Result<()> {
@@ -73,10 +83,13 @@ fn main() -> Result<()> {
             ])?;
             run_podman(&["container", "stop", &encode_container_name(&name)])?;
         }
-        Cmd::Rm { name } => {
+        Cmd::Kill { name } => {
+            run_podman(&["container", "kill", &encode_container_name(&name)])?;
+        }
+        Cmd::Remove { name } => {
             run_podman(&["image", "rm", &encode_image_name(&name)])?;
         }
-        Cmd::Ls {} => {
+        Cmd::List {} => {
             container_list()?.iter().for_each(|c| {
                 println!("{:?}", c);
             });
